@@ -1,6 +1,7 @@
 (function (module) {
     mifosX.controllers = _.extend(module, {
-        ViewClientController: function (scope, routeParams, route, location, resourceFactory, http, $uibModal, API_VERSION, $rootScope, Upload) {
+        ViewClientController: function (scope, routeParams, route, location, resourceFactory, http, $uibModal,
+            API_VERSION, $rootScope, Upload, middlewareAuthService, middlewareService) {
             scope.client = [];
             scope.identitydocuments = [];
             scope.buttons = [];
@@ -9,33 +10,34 @@
             scope.formData = {};
             scope.openLoan = true;
             scope.openSaving = true;
-            scope.openShares = true ;
+            scope.openShares = true;
             scope.updateDefaultSavings = false;
             scope.charges = [];
 
 
             // address
-            scope.addresses=[];
-            scope.view={};
-            scope.view.data=[];
-           // scope.families=[];
-            var entityname="ADDRESS";
-            formdata={};
+            scope.addresses = [];
+            scope.view = {};
+            scope.view.data = [];
+            // scope.families=[];
+            var entityname = "ADDRESS";
+            formdata = {};
+
+            middlewareAuthService.authenticate();
 
 
-            resourceFactory.clientTemplateResource.get(function(data)
-            {
-                scope.enableAddress=data.isAddressEnabled;
-                if(scope.enableAddress===true)
-                {
+            resourceFactory.clientTemplateResource.get(function (data) {
+                scope.enableAddress = data.isAddressEnabled;
+                if (scope.enableAddress === true) {
 
-                    resourceFactory.addressFieldConfiguration.get({entity:entityname},function(data){
+                    resourceFactory.addressFieldConfiguration.get({
+                        entity: entityname
+                    }, function (data) {
 
 
-                        for(var i=0;i<data.length;i++)
-                        {
-                            data[i].field='scope.view.'+data[i].field;
-                            eval(data[i].field+"="+data[i].is_enabled);
+                        for (var i = 0; i < data.length; i++) {
+                            data[i].field = 'scope.view.' + data[i].field;
+                            eval(data[i].field + "=" + data[i].is_enabled);
 
                         }
 
@@ -43,10 +45,11 @@
                     })
 
 
-                    resourceFactory.clientAddress.get({clientId:routeParams.id},function(data)
-                    {
+                    resourceFactory.clientAddress.get({
+                        clientId: routeParams.id
+                    }, function (data) {
 
-                        scope.addresses=data;
+                        scope.addresses = data;
 
 
                     })
@@ -55,38 +58,36 @@
                 }
 
 
-               /* resourceFactory.getAllFamilyMembers.get({clientId:routeParams.id},function(data)
-                {
+                /* resourceFactory.getAllFamilyMembers.get({clientId:routeParams.id},function(data)
+                 {
 
-                    scope.families=data;
+                     scope.families=data;
 
 
-                })*/
+                 })*/
 
             });
 
 
 
 
-            scope.routeTo=function()
-            {
-                location.path('/address/'+ routeParams.id);
+            scope.routeTo = function () {
+                location.path('/address/' + routeParams.id);
             }
 
-            scope.ChangeAddressStatus=function(id,status,addressId)
-            {
+            scope.ChangeAddressStatus = function (id, status, addressId) {
 
-                formdata.isActive=!status
-                formdata.addressId=addressId
-                resourceFactory.clientAddress.put({clientId:id},formdata,function(data)
-                {
+                formdata.isActive = !status
+                formdata.addressId = addressId
+                resourceFactory.clientAddress.put({
+                    clientId: id
+                }, formdata, function (data) {
                     route.reload();
                 })
             }
 
-            scope.routeToEdit=function(clientId,addressId)
-            {
-                location.path('/editAddress/'+clientId+'/'+addressId+'/'+ routeParams.id);
+            scope.routeToEdit = function (clientId, addressId) {
+                location.path('/editAddress/' + clientId + '/' + addressId + '/' + routeParams.id);
 
 
             }
@@ -97,41 +98,41 @@
 
             // family members
 
-            scope.families=[];
+            scope.families = [];
 
 
 
 
-            resourceFactory.familyMembers.get({clientId:routeParams.id},function(data)
-            {
+            resourceFactory.familyMembers.get({
+                clientId: routeParams.id
+            }, function (data) {
 
-                scope.families=data;
+                scope.families = data;
 
 
             });
 
-            scope.deleteFamilyMember=function(clientFamilyMemberId)
-            {
+            scope.deleteFamilyMember = function (clientFamilyMemberId) {
 
-                resourceFactory.familyMember.delete({clientId:routeParams.id,clientFamilyMemberId:clientFamilyMemberId},function(data)
-                {
+                resourceFactory.familyMember.delete({
+                    clientId: routeParams.id,
+                    clientFamilyMemberId: clientFamilyMemberId
+                }, function (data) {
 
                     route.reload();
                 })
 
             }
 
-            scope.editFamilyMember=function(clientFamilyMemberId)
-            {
+            scope.editFamilyMember = function (clientFamilyMemberId) {
 
-                location.path('/editfamilymember/'+routeParams.id+'/'+clientFamilyMemberId);
+                location.path('/editfamilymember/' + routeParams.id + '/' + clientFamilyMemberId);
 
 
             }
 
-            scope.routeToaddFamilyMember=function()
-            {
-                location.path('/addfamilymembers/'+ routeParams.id);
+            scope.routeToaddFamilyMember = function () {
+                location.path('/addfamilymembers/' + routeParams.id);
             }
 
 
@@ -146,12 +147,12 @@
                 location.path(scope.pathToChargeOverview());
             };
 
-            scope.pathToChargeOverview =function (){
-                return ('/viewclient/'+ scope.client.id + '/chargeoverview');
+            scope.pathToChargeOverview = function () {
+                return ('/viewclient/' + scope.client.id + '/chargeoverview');
             }
 
             scope.routeToCharge = function (chargeId) {
-                location.path('/viewclient/'+ scope.client.id + '/charges/' + chargeId);
+                location.path('/viewclient/' + scope.client.id + '/charges/' + chargeId);
             };
 
             scope.routeToSaving = function (id, depositTypeCode) {
@@ -164,12 +165,14 @@
                 }
             };
 
-            scope.routeToShareAccount = function(id) {
-                location.path('/viewshareaccount/'+id)
-            } ;
+            scope.routeToShareAccount = function (id) {
+                location.path('/viewshareaccount/' + id)
+            };
 
             scope.haveFile = [];
-            resourceFactory.clientResource.get({clientId: routeParams.id}, function (data) {
+            resourceFactory.clientResource.get({
+                clientId: routeParams.id
+            }, function (data) {
                 scope.client = data;
                 scope.isClosedClient = scope.client.status.value == 'Closed';
                 scope.staffData.staffId = data.staffId;
@@ -195,18 +198,18 @@
                 });
 
                 scope.navigateToSavingsOrDepositAccount = function (eventName, accountId, savingProductType) {
-                    switch(eventName) {
+                    switch (eventName) {
 
                         case "deposit":
-                            if(savingProductType==100)
+                            if (savingProductType == 100)
                                 location.path('/savingaccount/' + accountId + '/deposit');
-                            if(savingProductType==300)
+                            if (savingProductType == 300)
                                 location.path('/recurringdepositaccount/' + accountId + '/deposit');
                             break;
                         case "withdraw":
-                            if(savingProductType==100)
+                            if (savingProductType == 100)
                                 location.path('/savingaccount/' + accountId + '/withdrawal');
-                            if(savingProductType==300)
+                            if (savingProductType == 300)
                                 location.path('/recurringdepositaccount/' + accountId + '/withdrawal');
                             break;
                     }
@@ -217,8 +220,7 @@
 
                 if (clientStatus.statusKnown(data.status.value)) {
                     scope.buttons = clientStatus.getStatus(data.status.value);
-                    scope.savingsActionbuttons = [
-                        {
+                    scope.savingsActionbuttons = [{
                             name: "button.deposit",
                             type: "100",
                             icon: "fa fa-arrow-up",
@@ -248,21 +250,22 @@
                 if (data.status.value == "Pending" || data.status.value == "Active") {
                     if (data.staffId) {
 
-                    }
-                    else {
+                    } else {
                         scope.buttons.push(clientStatus.getStatus("Assign Staff"));
                     }
                 }
 
                 scope.buttonsArray = {
-                    options: [
-                        {
-                            name: "button.clientscreenreports"
-                        }
-                    ]
+                    options: [{
+                        name: "button.clientscreenreports"
+                    }]
                 };
                 scope.buttonsArray.singlebuttons = scope.buttons;
-                resourceFactory.runReportsResource.get({reportSource: 'ClientSummary', genericResultSet: 'false', R_clientId: routeParams.id}, function (data) {
+                resourceFactory.runReportsResource.get({
+                    reportSource: 'ClientSummary',
+                    genericResultSet: 'false',
+                    R_clientId: routeParams.id
+                }, function (data) {
                     scope.client.ClientSummary = data[0];
                 });
             });
@@ -321,17 +324,17 @@
                     $scope.error = null;
                 };
 
-                $scope.onStream = function(stream) {
+                $scope.onStream = function (stream) {
                     $scope.stream = stream
                 }
 
                 $scope.onVideoError = function (err) {
-                    if(typeof err != "undefined")
+                    if (typeof err != "undefined")
                         $scope.error = err.message + '(' + err.name + ')';
                 };
 
                 $scope.takeScreenshot = function () {
-                    if($scope.videoChannel.video) {
+                    if ($scope.videoChannel.video) {
                         var picCanvas = document.createElement('canvas');
                         var width = $scope.videoChannel.video.width;
                         var height = $scope.videoChannel.video.height;
@@ -346,7 +349,7 @@
                     }
                 };
                 $scope.uploadscreenshot = function () {
-                    if($scope.picture != null) {
+                    if ($scope.picture != null) {
                         http({
                             method: 'POST',
                             url: $rootScope.hostUrl + API_VERSION + '/clients/' + routeParams.id + '/images',
@@ -422,7 +425,7 @@
                     $uibModalInstance.dismiss('cancel');
                 };
             };
-            
+
             scope.deleteSig = function () {
                 $uibModal.open({
                     templateUrl: 'deletesig.html',
@@ -431,27 +434,27 @@
             };
             var DeleteSigCtrl = function ($scope, $uibModalInstance) {
                 http({
-                        method: 'GET',
-                        url: $rootScope.hostUrl + API_VERSION + '/clients/' + routeParams.id + '/documents'
-                    }).then(function (docsData) {
-                        $scope.docId = -1;
-                        for (var i = 0; i < docsData.data.length; ++i) {
-                            if (docsData.data[i].name == 'clientSignature') {
-                                $scope.docId = docsData.data[i].id;
-                                scope.signature_url = $rootScope.hostUrl + API_VERSION + '/clients/' + routeParams.id + '/documents/' + docId + '/attachment?tenantIdentifier=' + $rootScope.tenantIdentifier;
-                            }
+                    method: 'GET',
+                    url: $rootScope.hostUrl + API_VERSION + '/clients/' + routeParams.id + '/documents'
+                }).then(function (docsData) {
+                    $scope.docId = -1;
+                    for (var i = 0; i < docsData.data.length; ++i) {
+                        if (docsData.data[i].name == 'clientSignature') {
+                            $scope.docId = docsData.data[i].id;
+                            scope.signature_url = $rootScope.hostUrl + API_VERSION + '/clients/' + routeParams.id + '/documents/' + docId + '/attachment?tenantIdentifier=' + $rootScope.tenantIdentifier;
                         }
-                    });
+                    }
+                });
                 $scope.delete = function (file) {
                     http({
                         method: 'DELETE',
                         url: $rootScope.hostUrl + API_VERSION + '/clients/' + routeParams.id + '/documents/' + $scope.docId
                     }).then(function () {
                         if (!scope.$$phase) {
-                                scope.$apply();
-                            }
-                            $uibModalInstance.close('upload');
-                            route.reload();
+                            scope.$apply();
+                        }
+                        $uibModalInstance.close('upload');
+                        route.reload();
                     });
                 };
                 $scope.cancel = function () {
@@ -467,7 +470,9 @@
             };
             var ClientDeleteCtrl = function ($scope, $uibModalInstance) {
                 $scope.delete = function () {
-                    resourceFactory.clientResource.delete({clientId: routeParams.id}, {}, function (data) {
+                    resourceFactory.clientResource.delete({
+                        clientId: routeParams.id
+                    }, {}, function (data) {
                         $uibModalInstance.close('delete');
                         location.path('/clients');
                     });
@@ -478,7 +483,10 @@
             };
             var ClientUnassignCtrl = function ($scope, $uibModalInstance) {
                 $scope.unassign = function () {
-                    resourceFactory.clientResource.save({clientId: routeParams.id, command: 'unassignstaff'}, scope.staffData, function (data) {
+                    resourceFactory.clientResource.save({
+                        clientId: routeParams.id,
+                        command: 'unassignstaff'
+                    }, scope.staffData, function (data) {
                         $uibModalInstance.close('unassign');
                         route.reload();
                     });
@@ -487,7 +495,9 @@
                     $uibModalInstance.dismiss('cancel');
                 };
             };
-            resourceFactory.clientAccountResource.get({clientId: routeParams.id}, function (data) {
+            resourceFactory.clientAccountResource.get({
+                clientId: routeParams.id
+            }, function (data) {
                 scope.clientAccounts = data;
                 if (data.savingsAccounts) {
                     for (var i in data.savingsAccounts) {
@@ -496,18 +506,18 @@
                             break;
                         }
                     }
-                    scope.totalAllSavingsAccountsBalanceBasedOnCurrency=[];
+                    scope.totalAllSavingsAccountsBalanceBasedOnCurrency = [];
                     for (var i in data.savingsAccounts) {
                         if (!scope.isSavingClosed(data.savingsAccounts[i])) {
                             var isNewEntryMap = true;
-                            for(var j in scope.totalAllSavingsAccountsBalanceBasedOnCurrency){
-                                if(scope.totalAllSavingsAccountsBalanceBasedOnCurrency[j].code === data.savingsAccounts[i].currency.code){
+                            for (var j in scope.totalAllSavingsAccountsBalanceBasedOnCurrency) {
+                                if (scope.totalAllSavingsAccountsBalanceBasedOnCurrency[j].code === data.savingsAccounts[i].currency.code) {
                                     isNewEntryMap = false;
                                     var totalSavings = scope.totalAllSavingsAccountsBalanceBasedOnCurrency[j].totalSavings + data.savingsAccounts[i].accountBalance;
                                     scope.totalAllSavingsAccountsBalanceBasedOnCurrency[j].totalSavings = totalSavings;
                                 }
                             }
-                            if(isNewEntryMap){
+                            if (isNewEntryMap) {
                                 var map = {};
                                 map.code = data.savingsAccounts[i].currency.code;
                                 map.totalSavings = data.savingsAccounts[i].accountBalance;
@@ -518,7 +528,10 @@
                 }
             });
 
-            resourceFactory.clientChargesResource.getCharges({clientId: routeParams.id, pendingPayment:true}, function (data) {
+            resourceFactory.clientChargesResource.getCharges({
+                clientId: routeParams.id,
+                pendingPayment: true
+            }, function (data) {
                 scope.charges = data.pageItems;
             });
 
@@ -545,7 +558,7 @@
             };
 
             scope.isShareClosed = function (shareAccount) {
-                if ( shareAccount.status.code === "shareAccountStatusType.closed" ||
+                if (shareAccount.status.code === "shareAccountStatusType.closed" ||
                     shareAccount.status.code === "shareAccountStatusType.rejected") {
                     return true;
                 } else {
@@ -576,14 +589,21 @@
             };
 
 
-            resourceFactory.clientNotesResource.getAllNotes({clientId: routeParams.id}, function (data) {
+            resourceFactory.clientNotesResource.getAllNotes({
+                clientId: routeParams.id
+            }, function (data) {
                 scope.clientNotes = data;
             });
             scope.getClientIdentityDocuments = function () {
-                resourceFactory.clientResource.getAllClientDocuments({clientId: routeParams.id, anotherresource: 'identifiers'}, function (data) {
+                resourceFactory.clientResource.getAllClientDocuments({
+                    clientId: routeParams.id,
+                    anotherresource: 'identifiers'
+                }, function (data) {
                     scope.identitydocuments = data;
                     for (var i = 0; i < scope.identitydocuments.length; i++) {
-                        resourceFactory.clientIdentifierResource.get({clientIdentityId: scope.identitydocuments[i].id}, function (data) {
+                        resourceFactory.clientIdentifierResource.get({
+                            clientIdentityId: scope.identitydocuments[i].id
+                        }, function (data) {
                             for (var j = 0; j < scope.identitydocuments.length; j++) {
                                 if (data.length > 0 && scope.identitydocuments[j].id == data[0].parentEntityId) {
                                     for (var l in data) {
@@ -600,41 +620,80 @@
                 });
             };
 
-            resourceFactory.DataTablesResource.getAllDataTables({apptable: 'm_client'}, function (data) {
+            resourceFactory.DataTablesResource.getAllDataTables({
+                apptable: 'm_client'
+            }, function (data) {
                 scope.clientdatatables = data;
             });
 
             scope.dataTableChange = function (clientdatatable) {
-                resourceFactory.DataTablesResource.getTableDetails({datatablename: clientdatatable.registeredTableName,
-                    entityId: routeParams.id, genericResultSet: 'true'}, function (data) {
-                    scope.datatabledetails = data;
-                    scope.datatabledetails.isData = data.data.length > 0 ? true : false;
-                    scope.datatabledetails.isMultirow = data.columnHeaders[0].columnName == "id" ? true : false;
-                    scope.showDataTableAddButton = !scope.datatabledetails.isData || scope.datatabledetails.isMultirow;
-                    scope.showDataTableEditButton = scope.datatabledetails.isData && !scope.datatabledetails.isMultirow;
-                    scope.singleRow = [];
-                    for (var i in data.columnHeaders) {
-                        if (scope.datatabledetails.columnHeaders[i].columnCode) {
-                            for (var j in scope.datatabledetails.columnHeaders[i].columnValues) {
-                                for (var k in data.data) {
-                                    if (data.data[k].row[i] == scope.datatabledetails.columnHeaders[i].columnValues[j].id) {
-                                        data.data[k].row[i] = scope.datatabledetails.columnHeaders[i].columnValues[j].value;
-                                    }
+                resourceFactory.DataTablesResource.getTableDetails({
+                    datatablename: clientdatatable.registeredTableName,
+                    entityId: routeParams.id,
+                    genericResultSet: 'true'
+                }, function (data) {
+                    if (clientdatatable.registeredTableName == "Credentials") {
+                        if (data.data.length > 0) {
+                            decipherCredentialTable(data, function (decryptedData) {
+                                if (decryptedData.userId != undefined) {
+                                    data.data[0].row[data.columnHeaders.findIndex(x => x.columnName.includes("Aadhar"))] = decryptedData.aadharNumber;
+                                    data.data[0].row[data.columnHeaders.findIndex(x => x.columnName.includes("PAN"))] = decryptedData.panNumber;
+                                    data.data[0].row[data.columnHeaders.findIndex(x => x.columnName.includes("Bank"))] = decryptedData.bankAccountNumber;
+                                    data.data[0].row[data.columnHeaders.findIndex(x => x.columnName.includes("Data"))] = undefined;
+                                }
+                                showDatatable(data, false, false);
+                            });
+                        }
+                    } else {
+
+                    }
+                });
+            };
+
+            var removeElement = function(arr) {
+                var what, a = arguments, L = a.length, ax;
+                while (L > 1 && arr.length) {
+                    what = a[--L];
+                    while ((ax= arr.indexOf(what)) !== -1) {
+                        arr.splice(ax, 1);
+                    }
+                }
+                return arr;
+            }
+
+            var showDatatable = function(data, isAdd, isEditable) {
+                scope.datatabledetails = data;
+                scope.datatabledetails.isData = data.data.length > 0 ? true : false;
+                scope.datatabledetails.isMultirow = data.columnHeaders[0].columnName == "id" ? true : false;
+                scope.showDataTableAddButton = (!scope.datatabledetails.isData || scope.datatabledetails.isMultirow) && isAdd;
+                scope.showDataTableEditButton = (scope.datatabledetails.isData && !scope.datatabledetails.isMultirow) && isEditable;
+                scope.singleRow = [];
+                for (var i in data.columnHeaders) {
+                    if (scope.datatabledetails.columnHeaders[i].columnCode) {
+                        for (var j in scope.datatabledetails.columnHeaders[i].columnValues) {
+                            for (var k in data.data) {
+                                if (data.data[k].row[i] == scope.datatabledetails.columnHeaders[i].columnValues[j].id) {
+                                    data.data[k].row[i] = scope.datatabledetails.columnHeaders[i].columnValues[j].value;
                                 }
                             }
                         }
                     }
-                    if (scope.datatabledetails.isData) {
-                        for (var i in data.columnHeaders) {
-                            if (!scope.datatabledetails.isMultirow) {
-                                var row = {};
-                                row.key = data.columnHeaders[i].columnName;
-                                row.value = data.data[0].row[i];
-                                scope.singleRow.push(row);
-                            }
+                }
+                if (scope.datatabledetails.isData) {
+                    for (var i in data.columnHeaders) {
+                        if (!scope.datatabledetails.isMultirow) {
+                            var row = {};
+                            row.key = data.columnHeaders[i].columnName;
+                            row.value = data.data[0].row[i];
+                            scope.singleRow.push(row);
                         }
                     }
-                });
+                }
+            }
+
+            var decipherCredentialTable = function (credentialTableData, callback) {
+                var index = credentialTableData.columnHeaders.findIndex(x => x.columnName == "Data");
+                return middlewareService.decipherData(credentialTableData.data[0].row[index], scope.client.externalId, callback);
             };
 
             scope.viewstandinginstruction = function () {
@@ -644,13 +703,19 @@
                 location.path('/createstandinginstruction/' + scope.client.officeId + '/' + scope.client.id + '/fromsavings');
             };
             scope.deleteAll = function (apptableName, entityId) {
-                resourceFactory.DataTablesResource.delete({datatablename: apptableName, entityId: entityId, genericResultSet: 'true'}, {}, function (data) {
+                resourceFactory.DataTablesResource.delete({
+                    datatablename: apptableName,
+                    entityId: entityId,
+                    genericResultSet: 'true'
+                }, {}, function (data) {
                     route.reload();
                 });
             };
 
             scope.getClientDocuments = function () {
-                resourceFactory.clientDocumentsResource.getAllClientDocuments({clientId: routeParams.id}, function (data) {
+                resourceFactory.clientDocumentsResource.getAllClientDocuments({
+                    clientId: routeParams.id
+                }, function (data) {
                     for (var l in data) {
 
                         var loandocs = {};
@@ -660,7 +725,7 @@
                             if (data[l].fileName.toLowerCase().indexOf('.jpg') != -1 || data[l].fileName.toLowerCase().indexOf('.jpeg') != -1 || data[l].fileName.toLowerCase().indexOf('.png') != -1)
                                 data[l].fileIsImage = true;
                         if (data[l].type)
-                             if (data[l].type.toLowerCase().indexOf('image') != -1)
+                            if (data[l].type.toLowerCase().indexOf('image') != -1)
                                 data[l].fileIsImage = true;
                     }
                     scope.clientdocuments = data;
@@ -668,19 +733,22 @@
             };
 
             scope.deleteDocument = function (documentId, index) {
-                resourceFactory.clientDocumentsResource.delete({clientId: routeParams.id, documentId: documentId}, '', function (data) {
+                resourceFactory.clientDocumentsResource.delete({
+                    clientId: routeParams.id,
+                    documentId: documentId
+                }, '', function (data) {
                     scope.clientdocuments.splice(index, 1);
                 });
             };
 
             scope.previewDocument = function (url, fileName) {
-                scope.preview =  true;
+                scope.preview = true;
                 scope.fileUrl = scope.hostUrl + url;
-                if(fileName.toLowerCase().indexOf('.png') != -1)
+                if (fileName.toLowerCase().indexOf('.png') != -1)
                     scope.fileType = 'image/png';
-                else if(fileName.toLowerCase().indexOf('.jpg') != -1)
+                else if (fileName.toLowerCase().indexOf('.jpg') != -1)
                     scope.fileType = 'image/jpg';
-                else if(fileName.toLowerCase().indexOf('.jpeg') != -1)
+                else if (fileName.toLowerCase().indexOf('.jpeg') != -1)
                     scope.fileType = 'image/jpeg';
             };
 
@@ -693,7 +761,10 @@
             };
 
             scope.downloadDocument = function (documentId) {
-                resourceFactory.clientDocumentsResource.get({clientId: routeParams.id, documentId: documentId}, '', function (data) {
+                resourceFactory.clientDocumentsResource.get({
+                    clientId: routeParams.id,
+                    documentId: documentId
+                }, '', function (data) {
                     scope.clientdocuments.splice(index, 1);
                 });
             };
@@ -722,7 +793,7 @@
             };
 
             scope.isShareNotClosed = function (shareAccount) {
-                if ( shareAccount.status.code === "shareAccountStatusType.closed" ||
+                if (shareAccount.status.code === "shareAccountStatusType.closed" ||
                     shareAccount.status.code === "shareAccountStatusType.rejected") {
                     return false;
                 } else {
@@ -730,21 +801,29 @@
                 }
             };
             scope.saveNote = function () {
-                resourceFactory.clientResource.save({clientId: routeParams.id, anotherresource: 'notes'}, this.formData, function (data) {
+                resourceFactory.clientResource.save({
+                    clientId: routeParams.id,
+                    anotherresource: 'notes'
+                }, this.formData, function (data) {
                     var today = new Date();
-                    temp = { id: data.resourceId, note: scope.formData.note, createdByUsername: "test", createdOn: today };
+                    temp = {
+                        id: data.resourceId,
+                        note: scope.formData.note,
+                        createdByUsername: "test",
+                        createdOn: today
+                    };
                     scope.clientNotes.unshift(temp);
                     scope.formData.note = "";
                     scope.predicate = '-id';
                 });
             }
 
-            scope.showEditNote = function(clientId, clientNote, index) {
+            scope.showEditNote = function (clientId, clientNote, index) {
                 $uibModal.open({
                     templateUrl: 'editNote.html',
                     controller: EditNoteCtrl,
                     resolve: {
-                        items: function(){
+                        items: function () {
                             return {
                                 clientId: clientId,
                                 clientNote: clientNote,
@@ -756,12 +835,12 @@
                 });
             }
 
-            scope.showDeleteNote = function(clientId, clientNote, index) {
+            scope.showDeleteNote = function (clientId, clientNote, index) {
                 $uibModal.open({
                     templateUrl: 'deleteNote.html',
                     controller: DeleteNoteCtrl,
                     resolve: {
-                        items: function(){
+                        items: function () {
                             return {
                                 clientId: clientId,
                                 clientNote: clientNote,
@@ -777,7 +856,12 @@
                 scope.editData = {};
                 editData = {};
                 $scope.editNote = function (clientId, entityId, index, editData) {
-                    resourceFactory.clientNotesResource.put({clientId: items.clientId, noteId: items.clientNote}, {note: this.editData.editNote}, function(data) {
+                    resourceFactory.clientNotesResource.put({
+                        clientId: items.clientId,
+                        noteId: items.clientNote
+                    }, {
+                        note: this.editData.editNote
+                    }, function (data) {
                         scope.clientNotes[items.index].note = $scope.editData.editNote;
                         scope.editData.editNote = "";
                         $uibModalInstance.close();
@@ -790,7 +874,10 @@
 
             var DeleteNoteCtrl = function ($scope, $uibModalInstance, items) {
                 $scope.deleteNote = function (clientId, entityId, index) {
-                    resourceFactory.clientNotesResource.delete({clientId: items.clientId, noteId: items.clientNote}, '', function(data) {
+                    resourceFactory.clientNotesResource.delete({
+                        clientId: items.clientId,
+                        noteId: items.clientNote
+                    }, '', function (data) {
                         $uibModalInstance.close();
                         scope.clientNotes.splice(items.index, 1);
                     });
@@ -801,7 +888,10 @@
             };
 
             scope.deleteClientIdentifierDocument = function (clientId, entityId, index) {
-                resourceFactory.clientIdenfierResource.delete({clientId: clientId, id: entityId}, '', function (data) {
+                resourceFactory.clientIdenfierResource.delete({
+                    clientId: clientId,
+                    id: entityId
+                }, '', function (data) {
                     scope.identitydocuments.splice(index, 1);
                 });
             };
@@ -810,14 +900,16 @@
                 console.log(identifierId, documentId);
             };
 
-            scope.waiveCharge = function(chargeId){
-                resourceFactory.clientChargesResource.waive({clientId: routeParams.id, resourceType:chargeId}, function (data) {
+            scope.waiveCharge = function (chargeId) {
+                resourceFactory.clientChargesResource.waive({
+                    clientId: routeParams.id,
+                    resourceType: chargeId
+                }, function (data) {
                     route.reload();
                 });
             }
 
-            scope.showSignature = function()
-            {
+            scope.showSignature = function () {
                 $uibModal.open({
                     templateUrl: 'clientSignature.html',
                     controller: ViewLargerClientSignature,
@@ -825,8 +917,7 @@
                 });
             };
 
-            scope.showWithoutSignature = function()
-            {
+            scope.showWithoutSignature = function () {
                 $uibModal.open({
                     templateUrl: 'clientWithoutSignature.html',
                     controller: ViewClientWithoutSignature,
@@ -842,7 +933,7 @@
                 });
             };
 
-            var ViewClientWithoutSignature = function($scope,$uibModalInstance){
+            var ViewClientWithoutSignature = function ($scope, $uibModalInstance) {
                 $scope.cancel = function () {
                     $uibModalInstance.dismiss('cancel');
                 };
@@ -852,8 +943,8 @@
                 };
             };
 
-            var ViewLargerClientSignature = function($scope,$uibModalInstance){
-                var loadSignature = function(){
+            var ViewLargerClientSignature = function ($scope, $uibModalInstance) {
+                var loadSignature = function () {
                     http({
                         method: 'GET',
                         url: $rootScope.hostUrl + API_VERSION + '/clients/' + routeParams.id + '/documents'
@@ -909,7 +1000,7 @@
         }
     });
 
-    mifosX.ng.application.controller('ViewClientController', ['$scope', '$routeParams', '$route', '$location', 'ResourceFactory', '$http', '$uibModal', 'API_VERSION', '$rootScope', 'Upload', mifosX.controllers.ViewClientController]).run(function ($log) {
+    mifosX.ng.application.controller('ViewClientController', ['$scope', '$routeParams', '$route', '$location', 'ResourceFactory', '$http', '$uibModal', 'API_VERSION', '$rootScope', 'Upload', 'MiddlewareAuthService', 'MiddlewareService', mifosX.controllers.ViewClientController]).run(function ($log) {
         $log.info("ViewClientController initialized");
     });
 }(mifosX.controllers || {}));

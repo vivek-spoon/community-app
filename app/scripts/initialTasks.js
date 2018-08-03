@@ -1,6 +1,6 @@
 
 (function (mifosX) {
-    var defineHeaders = function ($httpProvider, $translateProvider, ResourceFactoryProvider, HttpServiceProvider, $idleProvider, $keepaliveProvider, IDLE_DURATION, WARN_DURATION, KEEPALIVE_INTERVAL) {
+    var defineHeaders = function ($httpProvider, $translateProvider, ResourceFactoryProvider, HttpServiceProvider, MiddlewareHttpServiceProvider, $idleProvider, $keepaliveProvider, IDLE_DURATION, WARN_DURATION, KEEPALIVE_INTERVAL) {
         var mainLink = getLocation(window.location.href);
         var baseApiUrl = "https://demo.openmf.org";
         var host = "";
@@ -49,6 +49,11 @@
         HttpServiceProvider.addRequestInterceptor('demoUrl', function (config) {
             return _.extend(config, {url: host + config.url });
         });
+
+        MiddlewareHttpServiceProvider.addRequestInterceptor('serverUrl', function(config) {
+            return _.extend(config, {url : 'http://localhost:8987' + config.url});
+        });
+
 
         // Enable CORS! (see e.g. http://enable-cors.org/)
         $httpProvider.defaults.useXDomain = true;

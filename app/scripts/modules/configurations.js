@@ -3,5 +3,6 @@ angular.module('configurations', [])
     .constant('IDLE_DURATION', 30 * 60)
     .constant('WARN_DURATION', 10)
     .constant('KEEPALIVE_INTERVAL', 15 * 60)
-    .constant('SECURITY', 'basicauth');
+    .constant('SECURITY', 'basicauth')
+    .constant('MIDDLEWARE_SECURITY', '{"username":"mifos-app-client", "password": "password", "clientId": "mifos-client-app", "clientSecret": "password"}');
 // Use SECURITY constant as 'oauth' to enable Oauth2 on community app
